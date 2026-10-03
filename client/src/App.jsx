@@ -1,9 +1,18 @@
 import React from 'react'
+import Register from './components/Register'
+import Login from './components/Login'
+import EmailVarify from './components/EmailVarify'
+import ForgetPassword from './components/ForgetPassword'
+import ResetPassword from './components/ResetPassword'
 
 const App = () => {
   return (
     <div>
-      <h1 className='text-green-500'>Mohanlal Manna</h1>
+      <Register/>
+      <Login/>
+      <EmailVarify/>
+      <ForgetPassword/>
+      <ResetPassword/>
     </div>
   )
 }
