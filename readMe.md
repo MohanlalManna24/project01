@@ -2,6 +2,8 @@
 
 A MERN application with a React/Vite client and an Express/MongoDB server. The server currently provides user registration, email verification, login, logout, and password recovery endpoints.
 
+For frontend implementation standards, API contracts, authentication flows, validation rules, and integration notes, see [FRONTEND_DEVELOPMENT_GUIDE.md](./FRONTEND_DEVELOPMENT_GUIDE.md).
+
 ## Project structure
 
 ```text
