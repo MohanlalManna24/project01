@@ -1,19 +1,48 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import api from "../api/axios.js";
 
-const EmailVarify = ({ email = "example@gmail.com" }) => {
+const EmailVarify = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const params = new URLSearchParams(location.search);
+  const emailFromQuery = params.get("email");
+  const emailFromState = location.state?.email;
+  const email = emailFromQuery || emailFromState || "";
   const [isSending, setIsSending] = useState(false);
   const [isSent, setIsSent] = useState(false);
-  const [isVarifyed, setIsVarifyed] = useState(false);
+  const [isVerified, setIsVerified] = useState(
+    params.get("verified") === "true",
+  );
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const handleVerifyEmail = () => {
-    if (isSending) return;
+  useEffect(() => {
+    const queryParams = new URLSearchParams(location.search);
+    const verifiedEmail = queryParams.get("email");
+
+    if (queryParams.get("verified") === "true") {
+      navigate("/email-varify", {
+        replace: true,
+        state: { email: verifiedEmail },
+      });
+    }
+  }, [location.search, navigate]);
+
+  const handleResendEmail = async () => {
+    if (isSending || !email) return;
     setIsSending(true);
+    setErrorMessage("");
 
-    // Simulate sending verification email
-    setTimeout(() => {
-      setIsSending(false);
+    try {
+      await api.post("/users/resend-verification", { email });
       setIsSent(true);
-    }, 1000);
+    } catch (error) {
+      setErrorMessage(
+        error.response?.data?.message || "Could not send verification email.",
+      );
+    } finally {
+      setIsSending(false);
+    }
   };
 
   return (
@@ -28,8 +57,8 @@ const EmailVarify = ({ email = "example@gmail.com" }) => {
           />
         </section>
 
-        {isVarifyed ? (
-          /* Success Screen when isVarifyed is true */
+        {isVerified ? (
+          /* Success Screen when isVerified is true */
           <div>
             <h1 className="mb-3 text-2xl sm:text-3xl font-bold tracking-tight text-[#1E293B]">
               Email Verified Successfully!
@@ -41,7 +70,7 @@ const EmailVarify = ({ email = "example@gmail.com" }) => {
             <div className="mt-8 flex flex-col items-center justify-center">
               <a
                 href="/login"
-                className="w-auto min-w-[190px] rounded-lg bg-[#4D73F8] hover:bg-[#3B62E8] active:bg-[#3055D6] px-6 py-3 text-base font-medium text-white shadow-sm transition-all focus:outline-none focus:ring-4 focus:ring-blue-500/20 text-center"
+                className="w-auto min-w-\[190px] rounded-lg bg-[#4D73F8] hover:bg-[#3B62E8] active:bg-[#3055D6] px-6 py-3 text-base font-medium text-white shadow-sm transition-all focus:outline-none focus:ring-4 focus:ring-blue-500/20 text-center"
               >
                 Continue to Login
               </a>
@@ -62,16 +91,16 @@ const EmailVarify = ({ email = "example@gmail.com" }) => {
                 <strong className="font-bold text-[#0F172A]">{email}</strong> as the
                 email address for your account.
               </p>
-              <p>Please verify this email address by clicking button below.</p>
+              <p>Please verify this email address to continue Registration. If you didn't have email, you can resend it.</p>
             </div>
 
             {/* Verify Action Button */}
             <div className="mt-8 flex flex-col items-center justify-center">
               <button
                 type="button"
-                onClick={handleVerifyEmail}
+                onClick={handleResendEmail}
                 disabled={isSending}
-                className="w-auto min-w-[190px] rounded-lg bg-[#4D73F8] hover:bg-[#3B62E8] active:bg-[#3055D6] px-6 py-3 text-base font-medium text-white shadow-sm transition-all focus:outline-none focus:ring-4 focus:ring-blue-500/20 cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed"
+                className="w-auto min-w-\[190px] rounded-lg bg-[#4D73F8] hover:bg-[#3B62E8] active:bg-[#3055D6] px-6 py-3 text-base font-medium text-white shadow-sm transition-all focus:outline-none focus:ring-4 focus:ring-blue-500/20 cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed"
               >
                 {isSending ? (
                   <div className="flex items-center justify-center gap-2">
@@ -81,7 +110,7 @@ const EmailVarify = ({ email = "example@gmail.com" }) => {
                 ) : isSent ? (
                   "Verification link sent ✓"
                 ) : (
-                  "Send Email"
+                  "Resend Email"
                 )}
               </button>
 
@@ -89,6 +118,11 @@ const EmailVarify = ({ email = "example@gmail.com" }) => {
               {isSent && (
                 <p className="mt-3 text-xs sm:text-sm font-medium text-emerald-600 animate-fade-in">
                   Check your inbox! A verification link has been sent to {email}.
+                </p>
+              )}
+              {errorMessage && (
+                <p className="mt-3 text-xs sm:text-sm font-medium text-red-600" role="alert">
+                  {errorMessage}
                 </p>
               )}
             </div>
@@ -100,4 +134,3 @@ const EmailVarify = ({ email = "example@gmail.com" }) => {
 };
 
 export default EmailVarify;
-
