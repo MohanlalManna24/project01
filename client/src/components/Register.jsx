@@ -15,6 +15,7 @@ const Register = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [fromData, setFormData] = useState({
     username: "",
     email: "",
@@ -26,6 +27,7 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMessage("");
+    setIsSubmitting(true);
 
     try {
       await api.post("/users/register", fromData);
@@ -39,6 +41,8 @@ const Register = () => {
 
       console.error("Error registering user:", error.response?.data || error);
       setErrorMessage(message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
   return (
@@ -90,7 +94,6 @@ const Register = () => {
             </div>
 
             <form className="space-y-4" onSubmit={handleSubmit}>
-              
               {errorMessage && (
                 <p className="text-sm text-red-600" role="alert">
                   {errorMessage}
@@ -102,7 +105,7 @@ const Register = () => {
                   htmlFor="username"
                 >
                   <FaUser className="inline mr-2 text-center" />
-                 Full Name
+                  Full Name
                 </label>
                 <input
                   className={inputClassName}
@@ -172,13 +175,18 @@ const Register = () => {
               </div>
 
               <button
+                disabled={isSubmitting}
                 className="w-full rounded-xl cursor-pointer bg-violet-600 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-violet-600/20 transition hover:bg-violet-700 focus:outline-none focus:ring-4 focus:ring-violet-500/25 active:scale-[0.99]"
                 type="submit"
               >
-                Create account
-                <span className="ml-2" aria-hidden="true">
-                  →
-                </span>
+                {isSubmitting ? (
+                  <div className="flex items-center justify-center">
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    <span className="ml-2">Creating account ...</span>
+                  </div>
+                ) : (
+                  "Create New account"
+                )}
               </button>
             </form>
 
