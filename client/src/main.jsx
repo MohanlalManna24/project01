@@ -9,6 +9,7 @@ import Register from "./components/Register.jsx";
 import ResetPassword from "./components/ResetPassword.jsx";
 import ForgetPassword from "./components/ForgetPassword.jsx";
 import EmailVarify from "./components/EmailVarify.jsx";
+import PageNotFound from "./pages/PageNotFound.jsx";
 
 const router = createBrowserRouter([
   {
@@ -40,9 +41,13 @@ const router = createBrowserRouter([
         element: <ForgetPassword />,
       },
       {
-        path:'/email-varify',
-        element:<EmailVarify/>
-      }
+        path: "/email-varify",
+        element: <EmailVarify />,
+      },
+      {
+        path: "*",
+        element: <PageNotFound />,
+      },
     ],
   },
 ]);
