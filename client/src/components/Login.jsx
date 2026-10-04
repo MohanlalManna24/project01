@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import { FaEye, FaEyeSlash, FaUser } from "react-icons/fa6";
 import { MdEmail } from "react-icons/md";
 import { TbLockPassword } from "react-icons/tb";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import api from "../api/axios.js";
 
 const loginImage =
   "https://img.magnific.com/premium-photo/login-page-with-password-access-online-profile-account_1313853-64810.jpg";
@@ -11,7 +12,10 @@ const inputClassName =
   "w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 hover:border-slate-300 focus:border-violet-500 focus:bg-white focus:ring-4 focus:ring-violet-500/10";
 
 const Login = () => {
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [fromData, setFormData] = useState({
     username: "",
     email: "",
@@ -20,9 +24,19 @@ const Login = () => {
   const handleChange = (e) => {
     setFormData({ ...fromData, [e.target.name]: e.target.value });
   };
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log(fromData);
+    setErrorMessage("");
+    setIsSubmitting(true);
+
+    try {
+      await api.post("/users/login", fromData);
+      navigate("/home");
+    } catch (error) {
+      setErrorMessage(error.response?.data?.message || "Could not login user.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
   return (
     <main className="box-border min-h-dvh bg-[#f7f7fb] px-3 py-3 sm:px-5 sm:py-5 lg:px-8 lg:py-4">
@@ -72,7 +86,13 @@ const Login = () => {
               </p>
             </div>
 
-            <form className="space-y-4">
+            {errorMessage && (
+              <div className="mb-4 rounded-md bg-red-100 px-4 py-3 text-sm text-red-700">
+                {errorMessage}
+              </div>
+            )}
+
+            <form className="space-y-4" onSubmit={handleSubmit}>
               <div>
                 <label
                   className="mb-1.5 block text-sm font-semibold text-slate-700"
@@ -126,21 +146,24 @@ const Login = () => {
                   </button>
                 </div>
                 <Link to="/forget-password">
-                <span className="text-sm text-violet-600 hover:text-green-900 cursor-pointer">
-                  Forgot your password?
-                </span>
+                  <span className="text-sm text-violet-600 hover:text-green-900 cursor-pointer">
+                    Forgot your password?
+                  </span>
                 </Link>
               </div>
 
               <button
                 className="w-full rounded-xl cursor-pointer bg-violet-600 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-violet-600/20 transition hover:bg-violet-700 focus:outline-none focus:ring-4 focus:ring-violet-500/25 active:scale-[0.99]"
                 type="submit"
-                onClick={handleSubmit}
               >
-                Login
-                <span className="ml-2" aria-hidden="true">
-                  →
-                </span>
+                {isSubmitting ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    <span>Logging in...</span>
+                  </div>
+                ) : (
+                  <span>Login</span>
+                )}
               </button>
             </form>
 
