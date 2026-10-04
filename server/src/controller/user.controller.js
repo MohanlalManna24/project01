@@ -82,6 +82,13 @@ const verifyEmail = async (req, res) => {
     user.token = undefined;
     await user.save();
 
+    if (req.method === "GET") {
+      const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
+      return res.redirect(
+        `${clientUrl}/email-varify?verified=true&email=${encodeURIComponent(user.email)}`,
+      );
+    }
+
     return res.status(200).json({ message: "Email verified successfully" });
   } catch (error) {
     if (
@@ -94,6 +101,33 @@ const verifyEmail = async (req, res) => {
     }
 
     console.error("Error verifying email:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+const resendVerificationEmail = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await userModel.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (user.isVerified) {
+      return res.status(400).json({ message: "Email is already verified" });
+    }
+
+    const token = jwt.sign({ id: user._id }, process.env.SECRET_KEY, {
+      expiresIn: "10m",
+    });
+    user.token = token;
+    await user.save();
+    await varifyEmail(token, user.email);
+
+    return res.status(200).json({ message: "Verification email sent" });
+  } catch (error) {
+    console.error("Error resending verification email:", error);
     return res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -295,4 +329,13 @@ const changePassword = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 }
-export default { registerUser, verifyEmail, userLogin, userLogout, forgetPassword, verifyOtp, changePassword };
+export default {
+  registerUser,
+  verifyEmail,
+  resendVerificationEmail,
+  userLogin,
+  userLogout,
+  forgetPassword,
+  verifyOtp,
+  changePassword,
+};
