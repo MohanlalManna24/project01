@@ -3,6 +3,7 @@ import { FaEye, FaEyeSlash, FaUser } from "react-icons/fa6";
 import { MdEmail } from "react-icons/md";
 import { TbLockPassword } from "react-icons/tb";
 import { Link, useNavigate } from "react-router-dom";
+import api from "../api/axios.js";
 
 const registerImage =
   "https://img.magnific.com/premium-photo/digital-user-profile-interface-laptop-with-hand-gesture_345906-5969.jpg";
@@ -13,6 +14,7 @@ const inputClassName =
 const Register = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const [fromData, setFormData] = useState({
     username: "",
     email: "",
@@ -21,10 +23,23 @@ const Register = () => {
   const handleChange = (e) => {
     setFormData({ ...fromData, [e.target.name]: e.target.value });
   };
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log(fromData);
-    navigate("/email-varify", { state: { email: fromData.email } });
+    setErrorMessage("");
+
+    try {
+      await api.post("/users/register", fromData);
+      navigate("/email-varify", { state: { email: fromData.email } });
+    } catch (error) {
+      const validationErrors = error.response?.data?.errors;
+      const message =
+        validationErrors?.map(({ msg }) => msg).join(", ") ||
+        error.response?.data?.message ||
+        "Registration failed. Please try again.";
+
+      console.error("Error registering user:", error.response?.data || error);
+      setErrorMessage(message);
+    }
   };
   return (
     <main className="box-border min-h-dvh bg-[#f7f7fb] px-3 py-3 sm:px-5 sm:py-5 lg:px-8 lg:py-4">
@@ -74,7 +89,13 @@ const Register = () => {
               </p>
             </div>
 
-            <form className="space-y-4">
+            <form className="space-y-4" onSubmit={handleSubmit}>
+              
+              {errorMessage && (
+                <p className="text-sm text-red-600" role="alert">
+                  {errorMessage}
+                </p>
+              )}
               <div>
                 <label
                   className="mb-1.5 block text-sm font-semibold text-slate-700"
@@ -153,7 +174,6 @@ const Register = () => {
               <button
                 className="w-full rounded-xl cursor-pointer bg-violet-600 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-violet-600/20 transition hover:bg-violet-700 focus:outline-none focus:ring-4 focus:ring-violet-500/25 active:scale-[0.99]"
                 type="submit"
-                onClick={handleSubmit}
               >
                 Create account
                 <span className="ml-2" aria-hidden="true">
