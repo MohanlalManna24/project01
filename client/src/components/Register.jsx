@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { FaEye, FaEyeSlash, FaUser } from "react-icons/fa6";
 import { MdEmail } from "react-icons/md";
 import { TbLockPassword } from "react-icons/tb";
+import { Link, useNavigate } from "react-router-dom";
 
 const registerImage =
   "https://img.magnific.com/premium-photo/digital-user-profile-interface-laptop-with-hand-gesture_345906-5969.jpg";
@@ -10,6 +11,7 @@ const inputClassName =
   "w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 hover:border-slate-300 focus:border-violet-500 focus:bg-white focus:ring-4 focus:ring-violet-500/10";
 
 const Register = () => {
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [fromData, setFormData] = useState({
     username: "",
@@ -22,6 +24,7 @@ const Register = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log(fromData);
+    navigate("/email-varify", { state: { email: fromData.email } });
   };
   return (
     <main className="box-border min-h-dvh bg-[#f7f7fb] px-3 py-3 sm:px-5 sm:py-5 lg:px-8 lg:py-4">
@@ -161,12 +164,12 @@ const Register = () => {
 
             <p className="mt-6 text-center text-sm text-slate-500">
               Already have an account?{" "}
-              <a
-                className="font-semibold text-violet-600 hover:text-violet-700"
-                href="/login"
+              <Link
+                className="font-semibold text-violet-600 hover:text-green-700"
+                to="/login"
               >
-                Sign in
-              </a>
+                Login
+              </Link>
             </p>
 
             <p className="mt-4 text-center text-xs leading-5 text-slate-400">

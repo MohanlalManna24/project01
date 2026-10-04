@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { FaEye, FaEyeSlash, FaUser } from "react-icons/fa6";
 import { MdEmail } from "react-icons/md";
 import { TbLockPassword } from "react-icons/tb";
+import { Link } from "react-router-dom";
 
 const loginImage =
   "https://img.magnific.com/premium-photo/login-page-with-password-access-online-profile-account_1313853-64810.jpg";
@@ -124,9 +125,11 @@ const Login = () => {
                     {showPassword ? <FaEyeSlash /> : <FaEye />}
                   </button>
                 </div>
+                <Link to="/forget-password">
                 <span className="text-sm text-violet-600 hover:text-green-900 cursor-pointer">
                   Forgot your password?
                 </span>
+                </Link>
               </div>
 
               <button
@@ -143,12 +146,12 @@ const Login = () => {
 
             <p className="mt-6 text-center text-sm text-slate-500">
               Don't have an account?
-              <a
+              <Link
                 className="font-semibold text-violet-600 hover:text-green-700"
-                href="/register"
+                to="/register"
               >
                 Register
-              </a>
+              </Link>
             </p>
 
             <p className="mt-4 text-center text-xs leading-5 text-slate-400">

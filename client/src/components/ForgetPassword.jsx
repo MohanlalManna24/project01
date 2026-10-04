@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { MdEmail, MdArrowBack, MdRefresh, MdCheckCircle, MdLockReset } from "react-icons/md";
 import { HiShieldCheck } from "react-icons/hi2";
 import { TbPasswordUser } from "react-icons/tb";
+import { Link } from "react-router-dom";
 
 const forgetImage =
   "https://img.magnific.com/premium-photo/secure-online-access-with-password-login-page-manage-personal-profile-account_1313853-60697.jpg";
@@ -177,13 +178,13 @@ const ForgetPassword = () => {
                 </p>
 
                 <div className="mt-6">
-                  <a
-                    href="/reset-password"
+                  <Link
+                    to="/reset-password"
                     className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-violet-600 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-violet-600/20 transition hover:bg-violet-700 active:scale-[0.99]"
                   >
                     Reset Password
                     <span aria-hidden="true">→</span>
-                  </a>
+                  </Link>
                 </div>
               </div>
             ) : step === 1 ? (
@@ -247,12 +248,12 @@ const ForgetPassword = () => {
 
                 <p className="mt-6 text-center text-sm text-slate-500">
                   Remember your password?{" "}
-                  <a
+                  <Link 
                     className="font-semibold text-violet-600 hover:text-violet-700"
-                    href="/login"
+                    to="/login"
                   >
                     Back to Login
-                  </a>
+                  </Link>
                 </p>
               </>
             ) : (
