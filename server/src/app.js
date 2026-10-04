@@ -4,6 +4,7 @@ import cors from "cors";
 
 const app = express();
 app.use(express.json());
+app.use(express.urlencoded({ extended: true })); // Middleware to parse URL-encoded data
 app.use(cors({
     origin: "http://localhost:5173", // frontend URL
 }));
