@@ -1,9 +1,11 @@
 import React from 'react'
+import { Outlet } from 'react-router-dom'
+
 
 const App = () => {
   return (
     <div>
-      <h1 className='text-green-500'>Mohanlal Manna</h1>
+      <Outlet/>
     </div>
   )
 }
