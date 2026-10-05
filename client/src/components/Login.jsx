@@ -30,7 +30,8 @@ const Login = () => {
     setIsSubmitting(true);
 
     try {
-      await api.post("/users/login", fromData);
+      const response = await api.post("/users/login", fromData);
+      localStorage.setItem("accessToken", response.data.user.accessToken);
       navigate("/home");
     } catch (error) {
       setErrorMessage(error.response?.data?.message || "Could not login user.");
