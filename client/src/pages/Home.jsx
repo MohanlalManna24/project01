@@ -39,12 +39,12 @@ const Home = () => {
     <div>
       {errorMessage && <p>{errorMessage}</p>}
       {user ? (
-        <>
-          <h1>Welcome, {user.username}</h1>
-          <p>Email: {user.email}</p>
-        </>
+        <div className="flex flex-col items-center justify-center min-h-screen">
+          <h1 className="text-2xl font-bold">Welcome, {user.username}</h1>
+          <p className="text-slate-600">Email: {user.email}</p>
+        </div>
       ) : (
-        !errorMessage && <p>Loading user details...</p>
+        !errorMessage && <p className="text-slate-500">Loading user details...</p>
       )}
     </div>
   );
