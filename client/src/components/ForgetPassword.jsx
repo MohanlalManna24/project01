@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from "react";
 import { MdEmail, MdArrowBack, MdRefresh, MdCheckCircle, MdLockReset } from "react-icons/md";
 import { HiShieldCheck } from "react-icons/hi2";
 import { TbPasswordUser } from "react-icons/tb";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import api from "../api/axios.js";
 
 const forgetImage =
   "https://img.magnific.com/premium-photo/secure-online-access-with-password-login-page-manage-personal-profile-account_1313853-60697.jpg";
@@ -11,6 +12,7 @@ const inputClassName =
   "w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 hover:border-slate-300 focus:border-violet-500 focus:bg-white focus:ring-4 focus:ring-violet-500/10";
 
 const ForgetPassword = () => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [step, setStep] = useState(1); // Step 1: Enter Email, Step 2: Enter OTP
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
@@ -19,6 +21,7 @@ const ForgetPassword = () => {
   const [countdown, setCountdown] = useState(0);
   const [isVerified, setIsVerified] = useState(false);
   const [resendAlert, setResendAlert] = useState(false);
+  const [otpError, setOtpError] = useState("");
   const inputRefs = useRef([]);
 
   // Resend OTP Countdown timer
@@ -37,6 +40,14 @@ const ForgetPassword = () => {
     e.preventDefault();
     if (!email) return;
 
+    api.post("/users/forget-password", { email })
+      .then((response) => {
+        console.log(response.data);
+      })
+      .catch((error) => {
+        console.error("Error sending OTP:", error);
+      });
+
     setIsSendingOtp(true);
     // Simulate sending OTP to email
     setTimeout(() => {
@@ -50,6 +61,7 @@ const ForgetPassword = () => {
 
   // Handle OTP digit changes
   const handleOtpChange = (index, value) => {
+    if (otpError) setOtpError("");
     const cleanValue = value.replace(/\D/g, "");
     if (!cleanValue && value !== "") return;
 
@@ -82,6 +94,7 @@ const ForgetPassword = () => {
 
   const handlePaste = (e) => {
     e.preventDefault();
+    if (otpError) setOtpError("");
     const pasteData = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
     if (!pasteData) return;
     const newOtp = [...otp];
@@ -112,11 +125,25 @@ const ForgetPassword = () => {
     if (otpCode.length < 6) return;
 
     setIsSubmittingOtp(true);
-    // Simulate verifying OTP
-    setTimeout(() => {
-      setIsSubmittingOtp(false);
-      setIsVerified(true);
-    }, 1200);
+    setOtpError("");
+
+    api.post(`/users/verify-otp/${encodeURIComponent(email)}`, { otp: otpCode })
+      .then((response) => {
+        console.log(response.data);
+        localStorage.setItem("passwordResetEmail", email);
+        setIsVerified(true);
+        navigate("/reset-password");
+      })
+      .catch((error) => {
+        console.error("Error verifying OTP:", error);
+        setOtpError(
+          error.response?.data?.message ||
+            "Invalid OTP. Please check the code and try again."
+        );
+      })
+      .finally(() => {
+        setIsSubmittingOtp(false);
+      });
   };
 
   const isOtpComplete = otp.every((digit) => digit.trim() !== "");
@@ -293,6 +320,15 @@ const ForgetPassword = () => {
                 )}
 
                 <form onSubmit={handleSubmitOtp} className="space-y-5">
+                  {otpError && (
+                    <div
+                      role="alert"
+                      className="rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2.5 text-xs font-semibold text-rose-700"
+                    >
+                      {otpError}
+                    </div>
+                  )}
+
                   <div>
                     <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">
                       6-Digit Security Code

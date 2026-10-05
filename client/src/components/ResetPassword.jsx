@@ -3,6 +3,8 @@ import { FaEye, FaEyeSlash } from "react-icons/fa6";
 import { TbLockPassword, TbLockCheck } from "react-icons/tb";
 import { MdCheckCircle, MdArrowBack } from "react-icons/md";
 import { HiShieldCheck } from "react-icons/hi2";
+import { Link, useNavigate } from "react-router-dom";
+import api from "../api/axios.js";
 
 const resetImage =
   "https://img.magnific.com/premium-photo/secure-online-access-with-password-login-page-manage-personal-profile-account_1313853-60655.jpg";
@@ -11,6 +13,7 @@ const inputClassName =
   "w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 hover:border-slate-300 focus:border-violet-500 focus:bg-white focus:ring-4 focus:ring-violet-500/10";
 
 const ResetPassword = () => {
+  const email = localStorage.getItem("passwordResetEmail") || "";
   const [formData, setFormData] = useState({
     newPassword: "",
     confirmPassword: "",
@@ -40,12 +43,30 @@ const ResetPassword = () => {
       return;
     }
 
+    if (!email) {
+      setErrorMessage("Your password reset session has expired. Please request a new OTP.");
+      return;
+    }
+
     setIsSubmitting(true);
-    // Simulate API call to reset password
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setIsSuccess(true);
-    }, 1200);
+    api
+      .post(`/users/change-password/${encodeURIComponent(email)}`, {
+        newPassword: formData.newPassword,
+        confirmPassword: formData.confirmPassword,
+      })
+      .then(() => {
+        localStorage.removeItem("passwordResetEmail");
+        setIsSuccess(true);
+      })
+      .catch((error) => {
+        setErrorMessage(
+          error.response?.data?.message ||
+            "An error occurred while resetting the password. Please try again."
+        );
+      })
+      .finally(() => {
+        setIsSubmitting(false);
+      });
   };
 
   return (
