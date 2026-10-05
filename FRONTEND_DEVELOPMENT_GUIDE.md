@@ -28,41 +28,28 @@ client/src/
   utils/
 ```
 
-The existing components in `client/src/assets/components/` may be migrated into this structure incrementally. Each page should own its form state and rendering; API modules should own URLs and request details.
+The current components live under `client/src/components/` and pages under
+`client/src/pages/`. Each page should own its form state and rendering; the
+shared Axios instance in `client/src/api/axios.js` owns the API base URL and
+common request configuration.
 
 ## 2. Environment configuration
 
-Create `client/.env.local`:
+Create `client/.env` or `client/.env.local`:
 
 ```env
-VITE_API_URL=http://localhost:4000
+VITE_API_BASE_URL=http://localhost:4000/api
 ```
 
-Use the Vite variable in one shared client:
+The current client uses Axios:
 
 ```js
-const API_URL = import.meta.env.VITE_API_URL;
+import axios from "axios";
 
-export async function apiRequest(path, options = {}) {
-  const response = await fetch(`${API_URL}/api${path}`, {
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
-    ...options,
-  });
-
-  const data = await response.json().catch(() => ({}));
-
-  if (!response.ok) {
-    const error = new Error(data.message || "Request failed");
-    error.status = response.status;
-    error.details = data.errors || [];
-    throw error;
-  }
-
-  return data;
-}
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE_URL,
+  headers: { "Content-Type": "application/json" },
+});
 ```
 
 Do not put `SECRET_KEY`, database credentials, mail credentials, or any other server secret in `client/.env*`. Only variables prefixed with `VITE_` are intended for browser code.
@@ -156,7 +143,40 @@ Use `accessToken` for authenticated requests:
 Authorization: Bearer ACCESS_TOKEN
 ```
 
-The access token expires after 7 days. The refresh token expires after 15 days. There is currently no refresh-token endpoint, so the UI should handle an expired access token by clearing the local session and sending the user to login.
+The access token expires after 7 days. The refresh token expires after 15 days.
+There is currently no refresh-token endpoint, so the UI should handle an
+expired access token by clearing the local session and sending the user to
+login. The current login screen stores the returned `accessToken` as
+`localStorage.accessToken` for the protected user request.
+
+### Get the authenticated user
+
+`GET /api/users/me`
+
+Headers:
+
+```http
+Authorization: Bearer <ACCESS_TOKEN>
+```
+
+The Home page calls this endpoint after login to load the latest user details
+from the server:
+
+```json
+{
+  "user": {
+    "_id": "USER_ID",
+    "username": "mohan_24",
+    "email": "mohan@example.com",
+    "isVerified": true,
+    "isLoggedIn": true
+  }
+}
+```
+
+The server excludes the password, OTP values, and private token fields. If the
+token is missing, invalid, or expired, the client clears `accessToken` and
+redirects to `/login`.
 
 ### Logout
 
@@ -235,7 +255,8 @@ Success:
 { "message": "Password updated successfully" }
 ```
 
-The backend currently checks that both values exist and match. The frontend should also require at least 4 characters to remain consistent with the login and registration rules.
+The backend currently checks that both values exist and match. The frontend
+requires at least 6 characters for a reset password.
 
 ## 4. Error handling
 
@@ -285,14 +306,11 @@ async function handleSubmit(event) {
   setStatus("submitting");
 
   try {
-    const result = await apiRequest("/users/register", {
-      method: "POST",
-      body: JSON.stringify(formData),
-    });
+    const response = await api.post("/users/register", formData);
 
     setStatus("success");
-    // Navigate to a "check your email" screen. Do not log the token.
-    console.info(result.message);
+    // Navigate to a "check your email" screen. Do not log any token.
+    console.info(response.data.message);
   } catch (error) {
     setStatus("error");
     if (error.details.length > 0) {
@@ -306,7 +324,10 @@ async function handleSubmit(event) {
 }
 ```
 
-The current `Register` component has the correct field names (`username`, `email`, and `password`) but does not yet have controlled state, a submit handler, or a submit button. Preserve those names because they match the API contract.
+The current `Register` component is controlled and uses the correct field
+names (`username`, `email`, and `password`). It navigates to the email
+verification screen after a successful request and renders validation errors
+from the API.
 
 ## 6. Authentication state and security
 
@@ -315,6 +336,8 @@ The current `Register` component has the correct field names (`username`, `email
 - Prefer secure, HTTP-only cookies for production authentication. The current API returns tokens in JSON, so token storage is a temporary client responsibility until cookie-based sessions are implemented.
 - Never print access, refresh, or verification tokens to the console.
 - Treat `401` as an expired or invalid session and redirect to login after clearing auth state.
+- Send the access token in the `Authorization` header when calling
+  protected endpoints such as `/users/me` and `/users/logout`.
 - Protect authenticated routes in the UI, but remember that real authorization must be enforced by the API.
 
 ## 7. UI and accessibility standards
@@ -339,10 +362,11 @@ Before opening a pull request:
 1. Start MongoDB and the server with `cd server && npm run dev`.
 2. Start the client with `cd client && npm run dev`.
 3. Verify registration, validation errors, email-verification feedback, login, logout, forgot-password, OTP verification, and password change.
-4. Confirm that requests include `Content-Type: application/json`.
-5. Confirm that protected requests include `Authorization: Bearer <accessToken>`.
-6. Test server errors, duplicate email, invalid credentials, expired OTP, and repeated submissions.
-7. Run:
+4. After login, verify that `/users/me` loads the username and email on `/home`.
+5. Confirm that requests include `Content-Type: application/json`.
+6. Confirm that protected requests include an Authorization header.
+7. Test server errors, duplicate email, invalid credentials, expired OTP, and repeated submissions.
+8. Run:
 
 ```bash
 cd client
@@ -354,8 +378,6 @@ npm run build
 
 These are important before production frontend work is considered complete:
 
-- Add and configure CORS for the Vite development origin and the production frontend origin; the current Express app does not configure CORS.
-- Align the email-verification route method with the generated email link (`GET` versus the currently registered `POST`).
 - Add a refresh-token endpoint or explicitly adopt short-lived access tokens with a secure cookie/session strategy.
 - Add a health endpoint so the frontend can distinguish an unavailable API from an invalid form submission.
 - Add a contact-message API before replacing the simulated submission in `Contact.jsx`.

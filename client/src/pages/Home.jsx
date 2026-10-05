@@ -44,7 +44,7 @@ const Home = () => {
           <p className="text-slate-600">Email: {user.email}</p>
         </div>
       ) : (
-        !errorMessage && <p className="text-slate-500">Loading user details...</p>
+        !errorMessage && <p>Loading user details...</p>
       )}
     </div>
   );
